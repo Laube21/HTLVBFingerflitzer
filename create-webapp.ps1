@@ -18,6 +18,17 @@ az webapp create `
   --plan asp-fingerflitzer `
   --resource-group rg-fingerflitzer | Out-Null
 
+  $SubscriptionId = (az account show | ConvertFrom-Json).id
+  $ServicePrincipalSecret = az ad sp create-for-rbac `
+    --name "gh-action-to-deploy-fingerflitzer-webapp-laus" `
+    --role contributor `
+    --scopes /subscriptions/$SubscriptionId/resourceGroups/rg-fingerflitzer/providers/Microsoft.Web/sites/wa-fingerflitzer-$UserName `
+    --json-auth
+
+  gh secret set AZURE_CREDENTIALS `
+    --repo Laube21/HTLVBFingerflitzer `
+    --body "$ServicePrincipalSecret"
+
 # Allow access from web app to database
 # see https://learn.microsoft.com/en-us/azure/app-service/tutorial-connect-msi-azure-database
 # az extension add --name serviceconnector-passwordless --upgrade
@@ -46,6 +57,7 @@ $WebApp = az webapp show `
   --resource-group rg-fingerflitzer | ConvertFrom-Json
 Write-Host "### Web app: $($WebApp.defaultHostName)"
 
-<#
+
 az group delete --name rg-fingerflitzer --no-wait
-#>
+$ServicePrincipal = az ad sp list --display-name "gh-action-to-deploy-fingerflitzer-webapp-laus" | ConvertFrom-Json
+az ad sp delete --id $ServicePrincipal.id
