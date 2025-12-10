@@ -25,9 +25,17 @@ az webapp create `
     --scopes /subscriptions/$SubscriptionId/resourceGroups/rg-fingerflitzer/providers/Microsoft.Web/sites/wa-fingerflitzer-$UserName `
     --json-auth
 
+  gh auth login
+
   gh secret set AZURE_CREDENTIALS `
     --repo Laube21/HTLVBFingerflitzer `
     --body "$ServicePrincipalSecret"
+
+  az webapp deployment slot create `
+    --slot staging `
+    --name wa-fingerflitzer-$UserName `
+    --resource-group rg-fingerflitzer
+
 
 # Allow access from web app to database
 # see https://learn.microsoft.com/en-us/azure/app-service/tutorial-connect-msi-azure-database
